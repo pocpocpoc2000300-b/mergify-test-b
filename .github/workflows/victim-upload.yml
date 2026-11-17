@@ -1,0 +1,19 @@
+name: victim-upload
+on: [push]
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate JUnit report
+        run: |
+          mkdir -p reports
+          printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<testsuite name="pytest" tests="3" failures="2" timestamp="2026-11-17T10:00:00">' '  <testcase name="victim_suite.test_alpha" classname="victim_suite" time="0.1"/>' '  <testcase name="victim_suite.test_beta" classname="victim_suite" time="0.2"><failure message="assert False">flaky</failure></testcase>' '  <testcase name="victim_suite.test_gamma" classname="victim_suite" time="0.1"><failure message="assert False">flaky2</failure></testcase>' '</testsuite>' > reports/junit-upload.xml
+      - name: Upload test results to Mergify
+        if: success() || failure()
+        uses: mergifyio/gha-mergify-ci@v25
+        with:
+          report_path: "reports/junit-*.xml"
+          mergify_cli_version: "2026.11.2"
